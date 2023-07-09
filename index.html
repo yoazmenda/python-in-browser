@@ -33,20 +33,17 @@
       const pythonCode = codeInput.value;
       
       // Load and initialize the Pyodide library
-      await loadPyodide({ indexURL : 'https://pyodide-cdn2.iodide.io/0.17.0/full/' });
+      await loadPyodide({ indexURL: 'https://pyodide-cdn2.iodide.io/0.17.0/full/' });
       
       try {
         // Redirect stdout to capture output
-        pyodide.runPython(`
-          import io, sys
-          sys.stdout = io.StringIO()
-        `);
+        const stdout = pyodide.runPython('import io, sys\nsys.stdout = io.StringIO()');
         
         // Execute the Python code
         pyodide.runPython(pythonCode);
         
         // Retrieve the captured output and display it
-        const capturedOutput = pyodide.runPython('sys.stdout.getvalue()');
+        const capturedOutput = stdout.getvalue();
         outputArea.innerText = capturedOutput;
       } catch (error) {
         // Display the error in the dedicated error area
