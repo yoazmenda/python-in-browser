@@ -18,8 +18,23 @@
   <h2>Errors:</h2>
   <pre id="errorArea"></pre>
   
-  <script src="https://pyodide.cdn.iodide.io/pyodide.js"></script>
   <script>
+    async function loadPyodide() {
+      // Load Pyodide library and initialize it
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js';
+      script.async = true;
+      document.body.appendChild(script);
+      
+      // Wait for Pyodide to load
+      await new Promise(resolve => {
+        script.onload = resolve;
+      });
+      
+      // Initialize Pyodide and return the top-level namespace
+      return self.pyodide;
+    }
+    
     async function runPythonCode() {
       const codeInput = document.getElementById('codeInput');
       const outputArea = document.getElementById('outputArea');
@@ -32,24 +47,27 @@
       // Retrieve the Python code from the input field
       const pythonCode = codeInput.value;
       
-      // Load and initialize the Pyodide library
-      await loadPyodide({ indexURL: 'https://pyodide-cdn2.iodide.io/0.17.0/full/' });
-      
       try {
         // Redirect stdout to capture output
-        const stdout = pyodide.runPython('import io, sys\nsys.stdout = io.StringIO()');
+        pyodide.runPython(`
+          import io, sys
+          sys.stdout = io.StringIO()
+        `);
         
         // Execute the Python code
         pyodide.runPython(pythonCode);
         
         // Retrieve the captured output and display it
-        const capturedOutput = stdout.getvalue();
+        const capturedOutput = pyodide.runPython('sys.stdout.getvalue()');
         outputArea.innerText = capturedOutput;
       } catch (error) {
         // Display the error in the dedicated error area
         errorArea.innerText = error.toString();
       }
     }
+    
+    // Attach the loadPyodide function to the window's onload event
+    window.onload = loadPyodide;
     
     // Attach the runPythonCode function to the run button's click event
     const runButton = document.getElementById('runButton');
