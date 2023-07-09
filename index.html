@@ -15,38 +15,43 @@
   <h2>Output:</h2>
   <pre id="outputArea"></pre>
   
+  <h2>Errors:</h2>
+  <pre id="errorArea"></pre>
+  
   <script src="https://pyodide.cdn.iodide.io/pyodide.js"></script>
   <script>
     async function runPythonCode() {
       const codeInput = document.getElementById('codeInput');
       const outputArea = document.getElementById('outputArea');
+      const errorArea = document.getElementById('errorArea');
       
-      // Clear the output area
+      // Clear the output and error areas
       outputArea.innerText = '';
+      errorArea.innerText = '';
       
       // Retrieve the Python code from the input field
       const pythonCode = codeInput.value;
       
       // Load and initialize the Pyodide library
       await loadPyodide({ indexURL : 'https://pyodide-cdn2.iodide.io/0.17.0/full/' });
-      await pyodide.runPythonAsync(`
-        import io, sys
-        
-        # Redirect stdout to capture output
-        sys.stdout = io.StringIO()
-        
-        try:
-          # Execute the Python code
-          ${pythonCode}
-          
-        except Exception as e:
-          # Capture any exceptions and print them
-          print(str(e))
-        `);
       
-      // Retrieve the captured output and display it
-      const capturedOutput = pyodide.runPython('sys.stdout.getvalue()');
-      outputArea.innerText = capturedOutput;
+      try {
+        // Redirect stdout to capture output
+        pyodide.runPython(`
+          import io, sys
+          sys.stdout = io.StringIO()
+        `);
+        
+        // Execute the Python code
+        pyodide.runPython(pythonCode);
+        
+        // Retrieve the captured output and display it
+        const capturedOutput = pyodide.runPython('sys.stdout.getvalue()');
+        outputArea.innerText = capturedOutput;
+      } catch (error) {
+        // Display the error in the dedicated error area
+        errorArea.innerText = error.toString();
+      }
     }
     
     // Attach the runPythonCode function to the run button's click event
