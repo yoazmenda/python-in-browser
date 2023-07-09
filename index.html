@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Python Web App</title>
+  <style>
+    /* Add your custom styles here */
+  </style>
+</head>
+<body>
+  <h1>Python Web App</h1>
+  
+  <textarea id="codeInput" rows="10" cols="50"></textarea>
+  <button id="runButton">Run</button>
+  
+  <h2>Output:</h2>
+  <pre id="outputArea"></pre>
+  
+  <script src="https://pyodide.cdn.iodide.io/pyodide.js"></script>
+  <script>
+    async function runPythonCode() {
+      const codeInput = document.getElementById('codeInput');
+      const outputArea = document.getElementById('outputArea');
+      
+      // Clear the output area
+      outputArea.innerText = '';
+      
+      // Retrieve the Python code from the input field
+      const pythonCode = codeInput.value;
+      
+      // Load and initialize the Pyodide library
+      await loadPyodide({ indexURL : 'https://pyodide-cdn2.iodide.io/0.17.0/full/' });
+      await pyodide.runPythonAsync(`
+        import io, sys
+        
+        # Redirect stdout to capture output
+        sys.stdout = io.StringIO()
+        
+        try:
+          # Execute the Python code
+          ${pythonCode}
+          
+        except Exception as e:
+          # Capture any exceptions and print them
+          print(str(e))
+        `);
+      
+      // Retrieve the captured output and display it
+      const capturedOutput = pyodide.runPython('sys.stdout.getvalue()');
+      outputArea.innerText = capturedOutput;
+    }
+    
+    // Attach the runPythonCode function to the run button's click event
+    const runButton = document.getElementById('runButton');
+    runButton.addEventListener('click', runPythonCode);
+  </script>
+</body>
+</html>
